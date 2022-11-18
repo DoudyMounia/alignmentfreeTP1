@@ -15,50 +15,52 @@ def kmer2str(val, k):
 
 
 
-
+'''
 def encode(letter):
     #letters={'A':0, 'C':1, 'T': 2, 'G':3}
     letters = ['A', 'C', 'T', 'G']
     
     return letters.index(letter)
-
-   
-text='AGGTC' 
-
-k=2   
+'''
+  
 
 def mask(k):
     return( (1<< 2*(k-1))-1)
 
 
-def stream_kmers(text, k):
+def str2kmer(nucl,scores):
+    if nucl in scores:
+        return scores[nucl]
+    else:
+        return 0
 
-    #encodage de la 1ere lettre:
-    kmer=0
-    for i in range (k-1):
-        #print(kmer)
-        kmer=kmer<<2
-        kmer=kmer+ encode(text[i])
-        print(kmer)
-        
-    #encodage du reste du text:
+def stream_kmers(text, k):
     list_kmer=[]
-    for i in text[k-1:]:
-        kmer=kmer & mask(k)
+    kmer=0
+    revkmer=0
+    mask=(1<<((k-1)*2))-1
+    revmask=(1<<(k*2))-1-3
+    scores={"A":0,"C":1,"T":2,"G":3}
+    rscores={"A":2,"C":3,"T":0,"G":1}
+    for i in range(k-1):
         kmer=kmer<<2
-        kmer+=encode(i)
-        print(kmer)
-        #rkmer=kmer
-        #rkmer=rkmer>>2
-        
-        list_kmer.append(kmer)
-        
+        revkmer=revkmer>>2
+        kmer+=str2kmer(text[i],scores)
+        revkmer+=str2kmer(text[i],rscores)<<(k-1)*2
+    for nucl in text[k-1:]:
+        kmer=kmer&mask
+        #revkmer=revkmer&revmask
+        kmer=kmer<<2
+        revkmer=revkmer>>2
+        kmer+=str2kmer(nucl,scores)
+        revkmer+=str2kmer(nucl,rscores)<<(k-1)*2
+        list_kmer.append(min(kmer, revkmer))
     return list_kmer
 
 
 
-
-a=stream_kmers('TGTA', 3)
+k=3
+a=stream_kmers('TGTA', k)
 print (a)
 for j in a:
     print(kmer2str(j, k))
